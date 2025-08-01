@@ -650,7 +650,14 @@
         
         function connectWebSocket() {
             try {
-                ws = new WebSocket('ws://localhost:3000');
+                // Determine WebSocket URL based on current location
+                const isHttps = window.location.protocol === 'https:';
+                const wsProtocol = isHttps ? 'wss:' : 'ws:';
+                const wsHost = window.location.host; // This will include the port if needed
+                const wsUrl = `${wsProtocol}//${wsHost}`;
+                
+                console.log('Connecting to WebSocket:', wsUrl);
+                ws = new WebSocket(wsUrl);
                 
                 ws.onopen = function() {
                     isConnected = true;
@@ -667,6 +674,7 @@
                 ws.onerror = function(error) {
                     isConnected = false;
                     updateConnectionStatus('connecting', 'Connection Error');
+                    console.error('WebSocket error:', error);
                 };
                 
                 ws.onmessage = function(event) {
