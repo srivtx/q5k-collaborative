@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q5K Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .admin-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .admin-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #4a5568;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 0 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .stat-icon.users { background: #4299e1; }
+        .stat-icon.rooms { background: #48bb78; }
+        .stat-icon.connections { background: #ed8936; }
+        .stat-icon.memory { background: #9f7aea; }
+
+        .stat-title {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .rooms-section {
+            padding: 0 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .room-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .room-header {
+            background: #4a5568;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .room-id {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .room-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+        }
+
+        .room-content {
+            padding: 20px;
+        }
+
+        .users-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .user-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: auto;
+        }
+
+        .user-status.online { background: #48bb78; }
+        .user-status.offline { background: #cbd5e0; }
+
+        .code-preview {
+            background: #1a202c;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .code-info {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .language-badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .code-length {
+            color: #718096;
+            font-size: 12px;
+        }
+
+        .room-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .delete-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #c53030;
+        }
+
+        .delete-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .no-rooms {
+            text-align: center;
+            color: white;
+            padding: 40px;
+            font-size: 16px;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #4299e1;
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #3182ce;
+            transform: scale(1.1);
+        }
+
+        .refresh-btn.loading {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .last-updated {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #4a5568;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .room-stats {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <div class="admin-title">
+            <i class="fas fa-shield-alt"></i>
+            Q5K Admin Panel
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon users">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-title">Active Users</div>
+            </div>
+            <div class="stat-value" id="totalUsers">-</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon rooms">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <div class="stat-title">Active Rooms</div>
+            </div>
+            <div class="stat-value" id="totalRooms">-</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon connections">
+                    <i class="fas fa-plug"></i>
+                </div>
+                <div class="stat-title">Connections</div>
+            </div>
+            <div class="stat-value" id="totalConnections">-</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon memory">
+                    <i class="fas fa-memory"></i>
+                </div>
+                <div class="stat-title">Memory Usage</div>
+            </div>
+            <div class="stat-value" id="memoryUsage">-</div>
+        </div>
+    </div>
+
+    <div class="rooms-section">
+        <div class="section-title">
+            <i class="fas fa-list"></i>
+            Active Rooms
+        </div>
+        <div id="roomsList"></div>
+    </div>
+
+    <button class="refresh-btn" id="refreshBtn">
+        <i class="fas fa-sync-alt"></i>
+    </button>
+
+    <div class="last-updated" id="lastUpdated">
+        Last updated: Never
+    </div>
+
+    <script>
+        let isLoading = false;
+        let deletingRooms = new Set(); // Track rooms being deleted
+
+        async function fetchStats() {
+            try {
+                const response = await fetch('/api/admin/stats');
+                const stats = await response.json();
+                
+                document.getElementById('totalUsers').textContent = stats.totalUsers;
+                document.getElementById('totalRooms').textContent = stats.totalRooms;
+                document.getElementById('totalConnections').textContent = stats.totalConnections;
+                document.getElementById('memoryUsage').textContent = formatBytes(stats.memoryUsage.heapUsed);
+                
+                return stats;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        async function fetchRooms() {
+            try {
+                const response = await fetch('/api/admin/rooms');
+                const rooms = await response.json();
+                
+                console.log('Fetched rooms:', rooms.length);
+                
+                const roomsList = document.getElementById('roomsList');
+                
+                if (rooms.length === 0) {
+                    roomsList.innerHTML = '<div class="no-rooms">No active rooms</div>';
+                    return;
+                }
+                
+                roomsList.innerHTML = rooms.map(room => `
+                    <div class="room-card">
+                        <div class="room-header">
+                            <div class="room-id">${room.shareId}</div>
+                            <div class="room-stats">
+                                <span><i class="fas fa-users"></i> ${room.userCount} users</span>
+                                <span><i class="fas fa-code"></i> ${room.codeLength} chars</span>
+                                <span><i class="fas fa-clock"></i> ${formatTimeAgo(room.lastActivity)}</span>
+                                ${room.hasCleanupTimer ? '<span style="color: #f56565;"><i class="fas fa-timer"></i> Cleanup scheduled</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="room-content">
+                            <div class="users-list">
+                                ${room.users.map(user => `
+                                    <div class="user-badge">
+                                        <div class="user-color" style="background-color: ${user.userColor};"></div>
+                                        <span>${user.userName}</span>
+                                        <div class="user-status ${user.connected ? 'online' : 'offline'}"></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="code-info">
+                                <div class="language-badge">${room.language}</div>
+                                <div class="code-length">${formatBytes(room.codeLength)} of code</div>
+                            </div>
+                            <div class="code-preview">${room.code || '<em>No code yet...</em>'}</div>
+                            <div class="room-actions">
+                                ${deletingRooms.has(room.shareId) ? 
+                                    `<button class="delete-btn" disabled>
+                                        <i class="fas fa-clock"></i> Deleting...
+                                    </button>` :
+                                    `<button class="delete-btn" onclick="deleteRoom('${room.shareId}', ${room.userCount})" title="Delete Room ${room.shareId}">
+                                        <i class="fas fa-trash"></i> Delete Room
+                                    </button>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                console.log('Rooms HTML updated, delete buttons should be visible');
+                
+            } catch (error) {
+                console.error('Error fetching rooms:', error);
+            }
+        }
+
+        async function refreshData() {
+            if (isLoading) return;
+            
+            isLoading = true;
+            const refreshBtn = document.getElementById('refreshBtn');
+            refreshBtn.classList.add('loading');
+            
+            try {
+                await Promise.all([fetchStats(), fetchRooms()]);
+                document.getElementById('lastUpdated').textContent = 
+                    `Last updated: ${new Date().toLocaleTimeString()}`;
+            } finally {
+                isLoading = false;
+                refreshBtn.classList.remove('loading');
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function formatTimeAgo(dateString) {
+            const now = new Date();
+            const past = new Date(dateString);
+            const diffMs = now - past;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            const diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) return `${diffHours}h ago`;
+            const diffDays = Math.floor(diffHours / 24);
+            return `${diffDays}d ago`;
+        }
+
+        async function deleteRoom(shareId, userCount) {
+            console.log('deleteRoom called with:', shareId, userCount);
+            
+            const userText = userCount === 1 ? '1 user' : `${userCount} users`;
+            const confirmMsg = userCount > 0 
+                ? `Are you sure you want to delete room ${shareId}?\n\nThis will disconnect ${userText} with a 30-second warning.`
+                : `Are you sure you want to delete room ${shareId}?\n\nRoom is currently empty.`;
+            
+            console.log('Showing confirmation dialog...');
+            if (!confirm(confirmMsg)) {
+                console.log('User cancelled deletion');
+                return;
+            }
+
+            console.log('User confirmed deletion, sending request...');
+            try {
+                const response = await fetch(`/api/admin/rooms/${shareId}`, {
+                    method: 'DELETE'
+                });
+                
+                console.log('Response received:', response.status);
+                const result = await response.json();
+                console.log('Result:', result);
+                
+                if (result.success) {
+                    // Add to deleting rooms set
+                    deletingRooms.add(shareId);
+                    
+                    alert(`Room ${shareId} scheduled for deletion. ${userCount > 0 ? 'Users will be notified.' : 'Room will be removed immediately.'}`);
+                    
+                    // Refresh immediately to show "Deleting..." status
+                    refreshData();
+                    
+                    // Remove from deleting set after 35 seconds (after deletion completes)
+                    setTimeout(() => {
+                        deletingRooms.delete(shareId);
+                        refreshData(); // Final refresh to show removal
+                    }, 35000);
+                    
+                    // Refresh again after 5 seconds to show countdown effect
+                    setTimeout(refreshData, 5000);
+                    
+                    // Refresh again after 15 seconds to show mid-countdown
+                    setTimeout(refreshData, 15000);
+                } else {
+                    alert('Failed to delete room: ' + (result.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error deleting room:', error);
+                alert('Error deleting room: ' + error.message);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('refreshBtn').addEventListener('click', refreshData);
+
+        // Auto-refresh every 5 seconds
+        setInterval(refreshData, 5000);
+
+        // Initial load
+        refreshData();
+    </script>
+</body>
+</html>

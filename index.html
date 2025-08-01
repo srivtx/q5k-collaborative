@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q5K - Collaborative Code Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            background: #f5f7fa;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #fff;
+            border-bottom: 1px solid #e1e5e9;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 18px;
+        }
+        
+        .logo i {
+            color: #4299e1;
+        }
+        
+        .share-info {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #edf2f7;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3182ce;
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+        
+        .connection-status.connected {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .connection-status.disconnected {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .connection-status.connecting {
+            background: #fef5e7;
+            color: #744210;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            gap: 1px;
+            background: #e1e5e9;
+        }
+        
+        .editor-panel {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .editor-header {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .file-name {
+            font-weight: 500;
+            color: #2d3748;
+            font-size: 14px;
+        }
+        
+        .editor-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        .code-editor {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 16px;
+            resize: none;
+            background: #fafafa;
+            color: #2d3748;
+        }
+        
+        .output-panel {
+            width: 400px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .output-header {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .tab-btn {
+            padding: 6px 12px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .tab-btn.active {
+            background: #4299e1;
+            color: white;
+        }
+        
+        .output-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .tab-content {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .tab-content.active {
+            display: flex;
+        }
+        
+        .terminal {
+            flex: 1;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .terminal-line {
+            margin: 4px 0;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .terminal-line.info { color: #3182ce; }
+        .terminal-line.error { color: #e53e3e; }
+        .terminal-line.output { color: #22543d; }
+        .terminal-line.welcome { color: #4a5568; }
+        
+        .timestamp {
+            color: #a0aec0;
+            font-size: 12px;
+            min-width: 70px;
+        }
+        
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .chat-message {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+        
+        .username {
+            font-weight: 600;
+            color: #4299e1;
+        }
+        
+        .time {
+            color: #a0aec0;
+        }
+        
+        .message-text {
+            color: #2d3748;
+            font-size: 14px;
+        }
+        
+        .chat-input-container {
+            padding: 12px 16px;
+            border-top: 1px solid #e1e5e9;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .chat-input:focus {
+            border-color: #4299e1;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .output-panel {
+                width: 100%;
+                height: 300px;
+            }
+            
+            .header-center {
+                gap: 8px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            color: #4a5568;
+        }
+        
+        .loading-spinner i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #4299e1;
+        }
+
+        .admin-notification {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #fed7d7;
+            border-bottom: 2px solid #fc8181;
+            padding: 12px 20px;
+            z-index: 1000;
+            color: #c53030;
+            font-weight: 600;
+        }
+
+        .admin-notification.error {
+            background: #fed7d7;
+            border-color: #e53e3e;
+            color: #c53030;
+        }
+
+        .admin-notification.warning {
+            background: #fefcbf;
+            border-color: #f6ad55;
+            color: #c05621;
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .disconnected-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            font-size: 18px;
+        }
+
+        .disconnected-overlay .icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #e53e3e;
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Admin Notification Banner -->
+    <div id="adminNotification" class="admin-notification" style="display: none;">
+        <div class="notification-content">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="notificationText"></span>
+            <button id="createNewRoomBtn" class="btn btn-primary" style="margin-left: 15px; display: none;">
+                <i class="fas fa-plus"></i> Create New Room
+            </button>
+        </div>
+    </div>
+
+    <!-- Disconnected Overlay -->
+    <div id="disconnectedOverlay" class="disconnected-overlay" style="display: none;">
+        <div class="icon">
+            <i class="fas fa-unlink"></i>
+        </div>
+        <h2>Room Disconnected</h2>
+        <p>This room has been deleted by an administrator</p>
+        <button id="goHomeBtn" class="btn btn-primary" style="margin-top: 20px;">
+            <i class="fas fa-home"></i> Go to Homepage
+        </button>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <i class="fas fa-code"></i>
+                <span>Q5K</span>
+            </div>
+            <div class="share-info" id="shareInfo">
+                <span>Room: </span>
+                <strong id="shareId"></strong>
+                <button id="copyLinkBtn" class="btn btn-secondary" title="Copy share link" style="padding: 4px 8px; margin-left: 8px;">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <span id="userCount" style="margin-left: 15px; color: #666; font-size: 14px;">
+                    <i class="fas fa-users"></i> <span id="userCountValue">0</span> users
+                </span>
+            </div>
+        </div>
+        
+        <div class="header-center">
+            <select id="languageSelector">
+                <option value="javascript">JavaScript</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="cpp">C++</option>
+            </select>
+            
+            <button id="runBtn" class="btn btn-primary">
+                <i class="fas fa-play"></i>
+                <span>Run</span>
+            </button>
+            
+            <button id="clearBtn" class="btn btn-secondary">
+                <i class="fas fa-trash"></i>
+                <span>Clear</span>
+            </button>
+        </div>
+        
+        <div class="header-right">
+            <div class="connection-status connecting" id="connectionStatus">
+                <i class="fas fa-circle"></i>
+                <span>Connecting...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="editor-panel">
+            <div class="editor-header">
+                <div class="file-name" id="fileName">main.js</div>
+                <div style="font-size: 12px; color: #a0aec0;">
+                    Press Ctrl+Enter to run code
+                </div>
+            </div>
+            <div class="editor-container">
+                <textarea class="code-editor" id="codeEditor" placeholder="Write your code here...">console.log("Hello, Q5K!");</textarea>
+            </div>
+        </div>
+
+        <div class="output-panel">
+            <div class="output-header">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="output">
+                        <i class="fas fa-terminal"></i>
+                        Output
+                    </button>
+                    <button class="tab-btn" data-tab="chat">
+                        <i class="fas fa-comments"></i>
+                        Chat
+                    </button>
+                </div>
+            </div>
+
+            <div class="output-content">
+                <div class="tab-content active" id="outputTab">
+                    <div class="terminal" id="terminal">
+                        <div class="terminal-line welcome">
+                            <span class="timestamp">Ready</span>
+                            <span class="text">Welcome to Q5K! Press Run to execute your code.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="chatTab">
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div style="text-align: center; color: #a0aec0; padding: 20px; font-size: 14px;">
+                                No messages yet. Start chatting with your collaborators!
+                            </div>
+                        </div>
+                        <div class="chat-input-container">
+                            <input type="text" class="chat-input" id="chatInput" placeholder="Type a message..." maxlength="500">
+                            <button id="sendChatBtn" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <div>Connecting to Q5K...</div>
+        </div>
+    </div>
+
+    <script>
+        // Simple Q5K implementation (embedded)
+        let editor;
+        let ws;
+        let isConnected = false;
+        let shareId = null;
+        let userId = 'user_' + Math.random().toString(36).substr(2, 9);
+        let userName = 'User' + Math.floor(Math.random() * 1000);
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+        
+        function initializeApp() {
+            editor = document.getElementById('codeEditor');
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Connect WebSocket
+            connectWebSocket();
+            
+            // Initialize from URL
+            initializeFromURL();
+            
+            // Hide loading
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+        
+        function setupEventListeners() {
+            // Run button
+            document.getElementById('runBtn').addEventListener('click', runCode);
+            
+            // Clear button
+            document.getElementById('clearBtn').addEventListener('click', clearOutput);
+            
+            // Language selector
+            document.getElementById('languageSelector').addEventListener('change', function(e) {
+                updateFileName(e.target.value);
+            });
+            
+            // Code updates (debounced)
+            let typingTimer;
+            editor.addEventListener('input', function() {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(sendCodeUpdate, 500);
+            });
+            
+            // Keyboard shortcuts
+            editor.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    runCode();
+                }
+            });
+            
+            // Chat functionality
+            const chatInput = document.getElementById('chatInput');
+            const sendChatBtn = document.getElementById('sendChatBtn');
+            
+            sendChatBtn.addEventListener('click', sendChatMessage);
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendChatMessage();
+                }
+            });
+            
+            // Tab switching
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    switchTab(this.dataset.tab);
+                });
+            });
+            
+            // Copy share link button
+            document.getElementById('copyLinkBtn').addEventListener('click', copyShareLink);
+
+            // Admin notification buttons
+            document.getElementById('createNewRoomBtn').addEventListener('click', createNewRoom);
+            document.getElementById('goHomeBtn').addEventListener('click', () => {
+                window.location.href = '/';
+            });
+        }
+        
+        function connectWebSocket() {
+            try {
+                ws = new WebSocket('ws://localhost:3000');
+                
+                ws.onopen = function() {
+                    isConnected = true;
+                    updateConnectionStatus('connected', 'Connected');
+                    joinRoom();
+                };
+                
+                ws.onclose = function() {
+                    isConnected = false;
+                    updateConnectionStatus('disconnected', 'Disconnected');
+                    setTimeout(connectWebSocket, 3000);
+                };
+                
+                ws.onerror = function(error) {
+                    isConnected = false;
+                    updateConnectionStatus('connecting', 'Connection Error');
+                };
+                
+                ws.onmessage = function(event) {
+                    try {
+                        const message = JSON.parse(event.data);
+                        console.log('Received WebSocket message:', message.type, message);
+                        handleServerMessage(message);
+                    } catch (e) {
+                        console.error('Failed to parse message:', e);
+                    }
+                };
+                
+            } catch (error) {
+                updateConnectionStatus('disconnected', 'Failed to connect');
+                setTimeout(connectWebSocket, 3000);
+            }
+        }
+        
+        function joinRoom() {
+            if (!isConnected) return;
+            
+            ws.send(JSON.stringify({
+                type: 'join',
+                shareId: shareId || 'q5k-room',
+                userId: userId,
+                userName: userName,
+                userColor: '#4299e1'
+            }));
+        }
+        
+        function handleServerMessage(message) {
+            switch (message.type) {
+                case 'roomUnavailable':
+                    // Clear room information
+                    shareId = null;
+                    document.getElementById('shareInfo').style.display = 'none';
+                    window.history.pushState({}, '', window.location.origin);
+                    
+                    alert('This room has been deleted by the administrator and is no longer available.');
+                    // Redirect to create new room
+                    window.location.href = window.location.origin;
+                    break;
+                    
+                case 'codeUpdate':
+                    if (message.userId !== userId) {
+                        editor.value = message.code;
+                        addTerminalLine('info', 'Code updated by another user');
+                    }
+                    break;
+                    
+                case 'executionResult':
+                    handleExecutionResult(message);
+                    break;
+                    
+                case 'chatMessage':
+                    addChatMessage(message);
+                    break;
+                    
+                case 'userJoined':
+                    addTerminalLine('info', message.user.userName + ' joined the room');
+                    break;
+                    
+                case 'userLeft':
+                    addTerminalLine('info', 'A user left the room');
+                    break;
+
+                case 'roomStats':
+                    updateRoomStats(message.userCount);
+                    break;
+
+                case 'adminNotification':
+                    showAdminNotification(message);
+                    break;
+
+                case 'roomDeleted':
+                    handleRoomDeleted(message);
+                    break;
+
+                case 'forceDisconnect':
+                    handleForceDisconnect(message);
+                    break;
+
+                case 'newRoomCreated':
+                    handleNewRoomCreated(message);
+                    break;
+                    
+                case 'shareCreated':
+                    shareId = message.shareId;
+                    updateShareInfo(shareId);
+                    break;
+            }
+        }
+        
+        function sendCodeUpdate() {
+            if (!isConnected) return;
+            
+            ws.send(JSON.stringify({
+                type: 'codeUpdate',
+                code: editor.value,
+                shareId: shareId || 'q5k-room'
+            }));
+        }
+        
+        function runCode() {
+            if (!isConnected) {
+                addTerminalLine('error', 'Not connected to server');
+                return;
+            }
+            
+            const code = editor.value.trim();
+            const language = document.getElementById('languageSelector').value;
+            
+            if (!code) {
+                addTerminalLine('error', 'No code to execute');
+                return;
+            }
+            
+            addTerminalLine('info', 'Running ' + language + ' code...');
+            
+            ws.send(JSON.stringify({
+                type: 'executeCode',
+                code: code,
+                language: language,
+                userId: userId,
+                shareId: shareId || 'q5k-room'
+            }));
+        }
+        
+        function handleExecutionResult(result) {
+            if (result.error) {
+                addTerminalLine('error', result.error);
+            }
+            if (result.output) {
+                addTerminalLine('output', result.output);
+            }
+            if (result.executionTime !== undefined) {
+                addTerminalLine('info', 'Completed in ' + result.executionTime + 'ms');
+            }
+        }
+        
+        function addTerminalLine(type, text) {
+            const terminal = document.getElementById('terminal');
+            const line = document.createElement('div');
+            line.className = 'terminal-line ' + type;
+            
+            const time = new Date().toLocaleTimeString();
+            line.innerHTML = '<span class="timestamp">' + time + '</span><span class="text">' + text + '</span>';
+            
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        function clearOutput() {
+            const terminal = document.getElementById('terminal');
+            terminal.innerHTML = '<div class="terminal-line welcome"><span class="timestamp">Ready</span><span class="text">Output cleared</span></div>';
+        }
+        
+        function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (!message || !isConnected) return;
+            
+            ws.send(JSON.stringify({
+                type: 'chatMessage',
+                message: message,
+                shareId: shareId || 'q5k-room'
+            }));
+            
+            chatInput.value = '';
+        }
+        
+        function addChatMessage(message) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // Remove empty state message
+            if (chatMessages.children.length === 1 && chatMessages.children[0].style.textAlign === 'center') {
+                chatMessages.innerHTML = '';
+            }
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-message';
+            
+            const time = new Date(message.timestamp).toLocaleTimeString();
+            msgDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="username">${message.userName}</span>
+                    <span class="time">${time}</span>
+                </div>
+                <div class="message-text">${message.message}</div>
+            `;
+            
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+        
+        function updateConnectionStatus(status, text) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.className = 'connection-status ' + status;
+            statusEl.querySelector('span').textContent = text;
+        }
+        
+        function updateShareInfo(id) {
+            document.getElementById('shareId').textContent = id;
+            document.getElementById('shareInfo').style.display = 'flex';
+        }
+
+        function updateRoomStats(userCount) {
+            document.getElementById('userCountValue').textContent = userCount;
+        }
+
+        function showAdminNotification(message) {
+            const notification = document.getElementById('adminNotification');
+            const notificationText = document.getElementById('notificationText');
+            const createNewRoomBtn = document.getElementById('createNewRoomBtn');
+            
+            notificationText.textContent = message.message;
+            notification.className = `admin-notification ${message.severity}`;
+            notification.style.display = 'block';
+            
+            if (message.countdown && message.countdown <= 10) {
+                createNewRoomBtn.style.display = 'inline-block';
+            }
+        }
+
+        function handleRoomDeleted(message) {
+            // Clear room information
+            shareId = null;
+            document.getElementById('shareInfo').style.display = 'none';
+            
+            // Show disconnected overlay
+            document.getElementById('disconnectedOverlay').style.display = 'flex';
+            
+            // Hide admin notification
+            document.getElementById('adminNotification').style.display = 'none';
+            
+            // Mark as disconnected
+            isConnected = false;
+            updateConnectionStatus('disconnected', 'Disconnected');
+            
+            // Clear URL
+            window.history.pushState({}, '', window.location.origin);
+        }
+
+        function handleForceDisconnect(message) {
+            // Force disconnect from room due to admin deletion
+            addTerminalLine('error', `Connection terminated: ${message.reason}`);
+            
+            // Clear room information
+            shareId = null;
+            document.getElementById('shareInfo').style.display = 'none';
+            
+            // Show disconnected overlay
+            document.getElementById('disconnectedOverlay').style.display = 'flex';
+            
+            // Hide admin notification
+            document.getElementById('adminNotification').style.display = 'none';
+            
+            // Mark as disconnected
+            isConnected = false;
+            updateConnectionStatus('disconnected', 'Disconnected by Admin');
+            
+            // Clear URL
+            window.history.pushState({}, '', window.location.origin);
+        }
+
+        function handleNewRoomCreated(message) {
+            // Redirect to new room
+            window.location.href = `/${message.shareId}`;
+        }
+
+        function createNewRoom() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            
+            const currentCode = document.getElementById('codeEditor').value;
+            
+            ws.send(JSON.stringify({
+                type: 'createNewRoom',
+                currentCode: currentCode
+            }));
+        }
+        
+        function updateFileName(language) {
+            const extensions = {
+                javascript: 'js',
+                python: 'py',
+                java: 'java',
+                cpp: 'cpp'
+            };
+            
+            document.getElementById('fileName').textContent = 'main.' + (extensions[language] || 'txt');
+        }
+        
+        function initializeFromURL() {
+            const path = window.location.pathname;
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomParam = urlParams.get('room');
+            
+            // Check if there's a room code in URL (either path or query param)
+            if (path !== '/' && path !== '/index.html') {
+                const roomCode = path.substring(1);
+                if (roomCode && roomCode.length > 0) {
+                    shareId = roomCode;
+                    updateShareInfo(shareId);
+                    return;
+                }
+            }
+            
+            if (roomParam) {
+                shareId = roomParam;
+                updateShareInfo(shareId);
+                return;
+            }
+            
+            // No room code found, generate a new one
+            generateNewRoom();
+        }
+        
+        function generateNewRoom() {
+            // Generate a unique 6-character room code
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            shareId = result;
+            
+            // Update URL without refreshing
+            const newUrl = window.location.origin + '/' + shareId;
+            window.history.pushState({}, '', newUrl);
+            
+            updateShareInfo(shareId);
+            addTerminalLine('info', 'New room created: ' + shareId);
+        }
+        
+        function copyShareLink() {
+            const shareUrl = window.location.origin + '/' + shareId;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showToast('Share link copied to clipboard!');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = shareUrl;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast('Share link copied to clipboard!');
+            });
+        }
+        
+        function showToast(message) {
+            // Create a simple toast notification
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4299e1;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 6px;
+                z-index: 1001;
+                font-size: 14px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
