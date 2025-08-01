@@ -327,24 +327,37 @@ class CodeExecutor {
         for (const image of images) {
             console.log(`Pulling Docker image: ${image}`);
             
-            await new Promise((resolve, reject) => {
-                const docker = spawn('docker', ['pull', image]);
-                
-                docker.on('close', (code) => {
-                    if (code === 0) {
-                        console.log(`Successfully pulled ${image}`);
-                        resolve();
-                    } else {
-                        console.error(`Failed to pull ${image}`);
-                        reject(new Error(`Failed to pull ${image}`));
-                    }
+            try {
+                await new Promise((resolve, reject) => {
+                    const docker = spawn('docker', ['pull', image]);
+                    
+                    // Set timeout for pulling images
+                    const timeout = setTimeout(() => {
+                        docker.kill();
+                        reject(new Error(`Timeout pulling ${image}`));
+                    }, 30000); // 30 second timeout
+                    
+                    docker.on('close', (code) => {
+                        clearTimeout(timeout);
+                        if (code === 0) {
+                            console.log(`Successfully pulled ${image}`);
+                            resolve();
+                        } else {
+                            console.error(`Failed to pull ${image}`);
+                            reject(new Error(`Failed to pull ${image}`));
+                        }
+                    });
+                    
+                    docker.on('error', (error) => {
+                        clearTimeout(timeout);
+                        console.error(`Error pulling ${image}:`, error);
+                        reject(error);
+                    });
                 });
-                
-                docker.on('error', (error) => {
-                    console.error(`Error pulling ${image}:`, error);
-                    reject(error);
-                });
-            });
+            } catch (error) {
+                console.warn(`Could not pull ${image}, will use fallback execution: ${error.message}`);
+                // Don't fail the entire startup, just log and continue
+            }
         }
     }
 }
@@ -471,12 +484,10 @@ async function initializeExecutor() {
     
     if (dockerAvailable) {
         console.log('Docker is available, using secure Docker execution');
-        try {
-            // Pull required images in the background
-            codeExecutor.pullImages().catch(console.error);
-        } catch (error) {
-            console.error('Failed to pull Docker images:', error);
-        }
+        // Pull required images in the background, don't block startup
+        codeExecutor.pullImages().catch(error => {
+            console.warn('Failed to pull Docker images, falling back to local execution:', error.message);
+        });
         executor = codeExecutor;
     } else {
         console.warn('Docker not available, using fallback executor (less secure)');

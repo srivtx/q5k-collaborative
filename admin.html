@@ -372,12 +372,12 @@
 
         async function fetchStats() {
             try {
-                const response = await fetch('/api/admin/stats');
+                const response = await fetch('/admin/stats');
                 const stats = await response.json();
                 
                 document.getElementById('totalUsers').textContent = stats.totalUsers;
                 document.getElementById('totalRooms').textContent = stats.totalRooms;
-                document.getElementById('totalConnections').textContent = stats.totalConnections;
+                document.getElementById('totalConnections').textContent = stats.totalUsers; // totalConnections not available, use totalUsers
                 document.getElementById('memoryUsage').textContent = formatBytes(stats.memoryUsage.heapUsed);
                 
                 return stats;
@@ -388,8 +388,9 @@
 
         async function fetchRooms() {
             try {
-                const response = await fetch('/api/admin/rooms');
-                const rooms = await response.json();
+                const response = await fetch('/admin/rooms');
+                const data = await response.json();
+                const rooms = data.rooms || []; // Handle the { rooms: [...] } structure
                 
                 console.log('Fetched rooms:', rooms.length);
                 
@@ -403,35 +404,34 @@
                 roomsList.innerHTML = rooms.map(room => `
                     <div class="room-card">
                         <div class="room-header">
-                            <div class="room-id">${room.shareId}</div>
+                            <div class="room-id">${room.id}</div>
                             <div class="room-stats">
-                                <span><i class="fas fa-users"></i> ${room.userCount} users</span>
-                                <span><i class="fas fa-code"></i> ${room.codeLength} chars</span>
+                                <span><i class="fas fa-users"></i> ${room.users.length} users</span>
+                                <span><i class="fas fa-code"></i> ${room.codeLength || 0} chars</span>
                                 <span><i class="fas fa-clock"></i> ${formatTimeAgo(room.lastActivity)}</span>
-                                ${room.hasCleanupTimer ? '<span style="color: #f56565;"><i class="fas fa-timer"></i> Cleanup scheduled</span>' : ''}
                             </div>
                         </div>
                         <div class="room-content">
                             <div class="users-list">
-                                ${room.users.map(user => `
+                                ${room.users.map(username => `
                                     <div class="user-badge">
-                                        <div class="user-color" style="background-color: ${user.userColor};"></div>
-                                        <span>${user.userName}</span>
-                                        <div class="user-status ${user.connected ? 'online' : 'offline'}"></div>
+                                        <div class="user-color" style="background-color: #4299e1;"></div>
+                                        <span>${username}</span>
+                                        <div class="user-status online"></div>
                                     </div>
                                 `).join('')}
                             </div>
                             <div class="code-info">
-                                <div class="language-badge">${room.language}</div>
-                                <div class="code-length">${formatBytes(room.codeLength)} of code</div>
+                                <div class="language-badge">${room.language || 'javascript'}</div>
+                                <div class="code-length">${room.codeLength || 0} chars of code</div>
                             </div>
                             <div class="code-preview">${room.code || '<em>No code yet...</em>'}</div>
                             <div class="room-actions">
-                                ${deletingRooms.has(room.shareId) ? 
+                                ${deletingRooms.has(room.id) ? 
                                     `<button class="delete-btn" disabled>
                                         <i class="fas fa-clock"></i> Deleting...
                                     </button>` :
-                                    `<button class="delete-btn" onclick="deleteRoom('${room.shareId}', ${room.userCount})" title="Delete Room ${room.shareId}">
+                                    `<button class="delete-btn" onclick="deleteRoom('${room.id}', ${room.users.length})" title="Delete Room ${room.id}">
                                         <i class="fas fa-trash"></i> Delete Room
                                     </button>`
                                 }
@@ -502,7 +502,7 @@
 
             console.log('User confirmed deletion, sending request...');
             try {
-                const response = await fetch(`/api/admin/rooms/${shareId}`, {
+                const response = await fetch(`/admin/rooms/${shareId}`, {
                     method: 'DELETE'
                 });
                 
