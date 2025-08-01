@@ -163,7 +163,6 @@ class CodeExecutor {
                 '--network=none', // No network access
                 '--memory=128m', // Memory limit
                 '--cpus=0.5', // CPU limit
-                '--timeout=10s', // Execution timeout
                 '-v', `${this.tempDir}:/app:ro`, // Mount temp directory as read-only
                 '--user', '1000:1000', // Run as non-root user
                 '--security-opt=no-new-privileges', // Security
@@ -378,8 +377,14 @@ class FallbackExecutor {
                 case 'python':
                     result = await this.executePythonFallback(code);
                     break;
+                case 'java':
+                    result = await this.executeJavaFallback(code);
+                    break;
+                case 'cpp':
+                    result = await this.executeCppFallback(code);
+                    break;
                 default:
-                    throw new Error(`Fallback execution not supported for ${language}`);
+                    throw new Error(`Fallback execution not supported for ${language}. Available: JavaScript, Python, Java, C++`);
             }
             
             const executionTime = Date.now() - startTime;
@@ -471,6 +476,26 @@ class FallbackExecutor {
             });
         });
     }
+
+    async executeJavaFallback(code) {
+        return new Promise((resolve) => {
+            // For Railway deployment, Java compilation might not be available
+            resolve({
+                output: '',
+                error: 'Java execution not available in this environment. Please use the Docker version for full language support.'
+            });
+        });
+    }
+
+    async executeCppFallback(code) {
+        return new Promise((resolve) => {
+            // For Railway deployment, C++ compilation might not be available
+            resolve({
+                output: '',
+                error: 'C++ execution not available in this environment. Please use the Docker version for full language support.'
+            });
+        });
+    }
 }
 
 // Initialize executor
@@ -484,11 +509,14 @@ async function initializeExecutor() {
     
     if (dockerAvailable) {
         console.log('Docker is available, using secure Docker execution');
-        // Pull required images in the background, don't block startup
-        codeExecutor.pullImages().catch(error => {
-            console.warn('Failed to pull Docker images, falling back to local execution:', error.message);
-        });
-        executor = codeExecutor;
+        // Try to pull one image to test if Docker actually works
+        try {
+            await codeExecutor.pullImages();
+            executor = codeExecutor;
+        } catch (error) {
+            console.warn('Docker available but images failed to pull, using fallback:', error.message);
+            executor = new FallbackExecutor();
+        }
     } else {
         console.warn('Docker not available, using fallback executor (less secure)');
         executor = new FallbackExecutor();
