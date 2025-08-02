@@ -393,6 +393,12 @@
                 
                 console.log('Fetched rooms:', rooms.length);
                 
+                // Debug: Log the first room to see its structure
+                if (rooms.length > 0) {
+                    console.log('First room data structure:', rooms[0]);
+                    console.log('Available keys in room:', Object.keys(rooms[0]));
+                }
+                
                 const roomsList = document.getElementById('roomsList');
                 
                 if (rooms.length === 0) {
@@ -403,7 +409,7 @@
                 roomsList.innerHTML = rooms.map(room => `
                     <div class="room-card">
                         <div class="room-header">
-                            <div class="room-id">${room.shareId}</div>
+                            <div class="room-id">${room.shareId || room.id || 'q5k-room'}</div>
                             <div class="room-stats">
                                 <span><i class="fas fa-users"></i> ${room.userCount} users</span>
                                 <span><i class="fas fa-code"></i> ${room.codeLength || 0} chars</span>
@@ -426,11 +432,11 @@
                             </div>
                             <div class="code-preview">${room.code || '<em>No code yet...</em>'}</div>
                             <div class="room-actions">
-                                ${deletingRooms.has(room.shareId) ? 
+                                ${deletingRooms.has(room.shareId || room.id) ? 
                                     `<button class="delete-btn" disabled>
                                         <i class="fas fa-clock"></i> Deleting...
                                     </button>` :
-                                    `<button class="delete-btn" onclick="deleteRoom('${room.shareId}', ${room.userCount})" title="Delete Room ${room.shareId}">
+                                    `<button class="delete-btn" onclick="deleteRoom('${room.shareId || room.id}', ${room.userCount})" title="Delete Room ${room.shareId || room.id}">
                                         <i class="fas fa-trash"></i> Delete Room
                                     </button>`
                                 }
