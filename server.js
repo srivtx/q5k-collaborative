@@ -107,12 +107,15 @@ class CodeShareServer {
             max: 100, // limit each IP to 100 requests per windowMs
             message: 'Too many requests from this IP, please try again later.'
         });
-        // Apply rate limiting to most API routes, but exclude admin endpoints
-        this.app.use('/api/', (req, res, next) => {
+        // Apply rate limiting to API routes, but exclude admin endpoints
+        this.app.use((req, res, next) => {
             if (req.path.startsWith('/admin/')) {
                 return next(); // Skip rate limiting for admin endpoints
             }
-            return limiter(req, res, next);
+            if (req.path.startsWith('/api/')) {
+                return limiter(req, res, next);
+            }
+            return next(); // Skip rate limiting for non-API routes
         });
         
         // Execution rate limiting (more restrictive)
@@ -204,17 +207,17 @@ class CodeShareServer {
         });
 
         // Admin API endpoints
-        this.app.get('/api/admin/stats', (req, res) => {
+        this.app.get('/admin/stats', (req, res) => {
             const stats = this.getServerStats();
             res.json(stats);
         });
 
-        this.app.get('/api/admin/rooms', (req, res) => {
+        this.app.get('/admin/rooms', (req, res) => {
             const roomsData = this.getRoomsData();
             res.json(roomsData);
         });
 
-        this.app.delete('/api/admin/rooms/:shareId', (req, res) => {
+        this.app.delete('/admin/rooms/:shareId', (req, res) => {
             const { shareId } = req.params;
             this.adminDeleteRoom(shareId);
             res.json({ success: true, message: `Room ${shareId} scheduled for deletion` });
