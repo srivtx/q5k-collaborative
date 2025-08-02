@@ -208,22 +208,17 @@ class CodeShareServer {
 
         // Admin API endpoints
         this.app.get('/admin/stats', (req, res) => {
-            console.log('[ADMIN] Stats endpoint called from:', req.ip);
             const stats = this.getServerStats();
-            console.log('[ADMIN] Sending stats:', JSON.stringify(stats, null, 2));
             res.json(stats);
         });
 
         this.app.get('/admin/rooms', (req, res) => {
-            console.log('[ADMIN] Rooms endpoint called from:', req.ip);
             const roomsData = this.getRoomsData();
-            console.log('[ADMIN] Sending rooms data:', JSON.stringify(roomsData, null, 2));
             res.json(roomsData);
         });
 
         this.app.delete('/admin/rooms/:shareId', (req, res) => {
             const { shareId } = req.params;
-            console.log('[ADMIN] Delete room endpoint called for:', shareId);
             this.adminDeleteRoom(shareId);
             res.json({ success: true, message: `Room ${shareId} scheduled for deletion` });
         });

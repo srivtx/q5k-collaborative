@@ -372,17 +372,12 @@
 
         async function fetchStats() {
             try {
-                console.log('[ADMIN CLIENT] Fetching stats from /admin/stats');
                 const response = await fetch('/admin/stats');
-                console.log('[ADMIN CLIENT] Response status:', response.status);
-                console.log('[ADMIN CLIENT] Response headers:', response.headers);
-                const responseText = await response.text();
-                console.log('[ADMIN CLIENT] Raw response text:', responseText);
-                const stats = JSON.parse(responseText);
+                const stats = await response.json();
                 
                 document.getElementById('totalUsers').textContent = stats.totalUsers;
                 document.getElementById('totalRooms').textContent = stats.totalRooms;
-                document.getElementById('totalConnections').textContent = stats.totalUsers; // totalConnections not available, use totalUsers
+                document.getElementById('totalConnections').textContent = stats.totalConnections;
                 document.getElementById('memoryUsage').textContent = formatBytes(stats.memoryUsage.heapUsed);
                 
                 return stats;
@@ -393,13 +388,8 @@
 
         async function fetchRooms() {
             try {
-                console.log('[ADMIN CLIENT] Fetching rooms from /admin/rooms');
                 const response = await fetch('/admin/rooms');
-                console.log('[ADMIN CLIENT] Rooms response status:', response.status);
-                const responseText = await response.text();
-                console.log('[ADMIN CLIENT] Raw rooms response text:', responseText);
-                const data = JSON.parse(responseText);
-                const rooms = data.rooms || data || []; // Handle both structures
+                const rooms = await response.json();
                 
                 console.log('Fetched rooms:', rooms.length);
                 
@@ -413,20 +403,20 @@
                 roomsList.innerHTML = rooms.map(room => `
                     <div class="room-card">
                         <div class="room-header">
-                            <div class="room-id">${room.id}</div>
+                            <div class="room-id">${room.shareId}</div>
                             <div class="room-stats">
-                                <span><i class="fas fa-users"></i> ${room.users.length} users</span>
+                                <span><i class="fas fa-users"></i> ${room.userCount} users</span>
                                 <span><i class="fas fa-code"></i> ${room.codeLength || 0} chars</span>
                                 <span><i class="fas fa-clock"></i> ${formatTimeAgo(room.lastActivity)}</span>
                             </div>
                         </div>
                         <div class="room-content">
                             <div class="users-list">
-                                ${room.users.map(username => `
+                                ${room.users.map(user => `
                                     <div class="user-badge">
-                                        <div class="user-color" style="background-color: #4299e1;"></div>
-                                        <span>${username}</span>
-                                        <div class="user-status online"></div>
+                                        <div class="user-color" style="background-color: ${user.userColor || '#4299e1'};"></div>
+                                        <span>${user.userName}</span>
+                                        <div class="user-status ${user.connected ? 'online' : 'offline'}"></div>
                                     </div>
                                 `).join('')}
                             </div>
@@ -436,11 +426,11 @@
                             </div>
                             <div class="code-preview">${room.code || '<em>No code yet...</em>'}</div>
                             <div class="room-actions">
-                                ${deletingRooms.has(room.id) ? 
+                                ${deletingRooms.has(room.shareId) ? 
                                     `<button class="delete-btn" disabled>
                                         <i class="fas fa-clock"></i> Deleting...
                                     </button>` :
-                                    `<button class="delete-btn" onclick="deleteRoom('${room.id}', ${room.users.length})" title="Delete Room ${room.id}">
+                                    `<button class="delete-btn" onclick="deleteRoom('${room.shareId}', ${room.userCount})" title="Delete Room ${room.shareId}">
                                         <i class="fas fa-trash"></i> Delete Room
                                     </button>`
                                 }
