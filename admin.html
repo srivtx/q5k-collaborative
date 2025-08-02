@@ -372,8 +372,13 @@
 
         async function fetchStats() {
             try {
+                console.log('[ADMIN CLIENT] Fetching stats from /admin/stats');
                 const response = await fetch('/admin/stats');
-                const stats = await response.json();
+                console.log('[ADMIN CLIENT] Response status:', response.status);
+                console.log('[ADMIN CLIENT] Response headers:', response.headers);
+                const responseText = await response.text();
+                console.log('[ADMIN CLIENT] Raw response text:', responseText);
+                const stats = JSON.parse(responseText);
                 
                 document.getElementById('totalUsers').textContent = stats.totalUsers;
                 document.getElementById('totalRooms').textContent = stats.totalRooms;
@@ -388,9 +393,13 @@
 
         async function fetchRooms() {
             try {
+                console.log('[ADMIN CLIENT] Fetching rooms from /admin/rooms');
                 const response = await fetch('/admin/rooms');
-                const data = await response.json();
-                const rooms = data.rooms || []; // Handle the { rooms: [...] } structure
+                console.log('[ADMIN CLIENT] Rooms response status:', response.status);
+                const responseText = await response.text();
+                console.log('[ADMIN CLIENT] Raw rooms response text:', responseText);
+                const data = JSON.parse(responseText);
+                const rooms = data.rooms || data || []; // Handle both structures
                 
                 console.log('Fetched rooms:', rooms.length);
                 
